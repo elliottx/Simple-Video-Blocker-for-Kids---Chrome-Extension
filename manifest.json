@@ -1,0 +1,33 @@
+{
+  "manifest_version": 3,
+  "name": "Simple Video Blocker for Kids",
+  "version": "1.0",
+  "description": "Blocks YouTube and TikTok videos across all websites and search engines.",
+  "permissions": [
+    "declarativeNetRequest"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ],
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "declarative_net_request": {
+    "rule_resources": [{
+      "id": "ruleset_1",
+      "enabled": true,
+      "path": "rules.json"
+    }]
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"]
+    }
+  ],
+  "icons": {
+    "128": "icon.png"
+  },
+  "privacy_policy": "privacy_policy.txt"
+}

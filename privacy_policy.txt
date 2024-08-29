@@ -1,0 +1,21 @@
+# Privacy Policy for Simple Video Blocker for Kids
+
+## Data Collection
+Our extension does not collect, store, or transmit any personal data from users.
+
+## Functionality
+This extension operates by blocking YouTube and TikTok videos across websites and search engines using declarative net request rules. It does not require access to or processing of user data to function.
+
+## Third-Party Services
+We do not use any third-party services or analytics in this extension.
+
+## User Rights
+As we do not collect any user data, there is no personal information to access, modify, or delete.
+
+## Changes to This Policy
+We may update this privacy policy from time to time. We will notify users of any changes by updating the "Last updated" date of this policy.
+
+## Contact Us
+If you have any questions about this privacy policy, please contact us at [Your Contact Information].
+
+Last updated: 2024-07-28
