@@ -1,9 +1,31 @@
-// Immediately mute and pause all audio and video elements
+let settings = {
+  allowHulu: false,
+  allowNetflix: false,
+  allowYouTube: false,
+  allowTikTok: false
+};
+
+function loadSettings() {
+  return new Promise((resolve) => {
+    chrome.storage.sync.get(['allowHulu', 'allowNetflix', 'allowYouTube', 'allowTikTok'], (result) => {
+      settings = { ...settings, ...result };
+      resolve();
+    });
+  });
+}
+
+function isAllowed(domain) {
+  return (
+    (domain.includes('hulu.com') && settings.allowHulu) ||
+    (domain.includes('netflix.com') && settings.allowNetflix) ||
+    ((domain.includes('youtube.com') || domain.includes('youtu.be')) && settings.allowYouTube) ||
+    (domain.includes('tiktok.com') && settings.allowTikTok)
+  );
+}
+
 function muteAndPauseMedia() {
   const currentDomain = window.location.hostname;
-  if (currentDomain.includes('netflix.com') || currentDomain.includes('hulu.com')) {
-    return; // Exit the function if we're on Netflix or Hulu
-  }
+  if (isAllowed(currentDomain)) return;
 
   const mediaElements = document.querySelectorAll('video, audio');
   mediaElements.forEach(element => {
@@ -12,19 +34,9 @@ function muteAndPauseMedia() {
   });
 }
 
-// Run muteAndPauseMedia immediately and periodically, except for Netflix and Hulu
-const currentDomain = window.location.hostname;
-if (!currentDomain.includes('netflix.com') && !currentDomain.includes('hulu.com')) {
-  muteAndPauseMedia();
-  setInterval(muteAndPauseMedia, 1000);
-}
-
 function removeVideos() {
-  // Check if the current domain is Netflix or Hulu
   const currentDomain = window.location.hostname;
-  if (currentDomain.includes('netflix.com') || currentDomain.includes('hulu.com')) {
-    return; // Exit the function if we're on Netflix or Hulu
-  }
+  if (isAllowed(currentDomain)) return;
 
   // Remove iframes
   const iframes = document.getElementsByTagName('iframe');
@@ -43,11 +55,9 @@ function removeVideos() {
   // Mute and remove video elements
   const videos = document.getElementsByTagName('video');
   for (let i = videos.length - 1; i >= 0; i--) {
-    if (!currentDomain.includes('netflix.com') && !currentDomain.includes('hulu.com')) {
-      videos[i].muted = true;
-      videos[i].pause();
-      videos[i].remove();
-    }
+    videos[i].muted = true;
+    videos[i].pause();
+    videos[i].remove();
   }
 
   // Remove YouTube custom embed
@@ -62,12 +72,12 @@ function removeVideos() {
     audios[i].muted = true;
     audios[i].pause();
   }
-
-  // Remove YouTube-nocookie videos
-  removeYouTubeNoCookieVideos();
 }
 
 function removeYouTubeNoCookieVideos() {
+  const currentDomain = window.location.hostname;
+  if (isAllowed(currentDomain)) return;
+
   const videos = document.querySelectorAll('video[src^="blob:https://www.youtube-nocookie.com/"]');
   videos.forEach(video => {
     video.pause();
@@ -75,45 +85,45 @@ function removeYouTubeNoCookieVideos() {
   });
 }
 
-// Run on page load
-removeVideos();
+loadSettings().then(() => {
+  // Run on page load
+  removeVideos();
+  muteAndPauseMedia();
 
-// Set up a MutationObserver to handle dynamically loaded content
-const observer = new MutationObserver(() => {
-  const currentDomain = window.location.hostname;
-  if (!currentDomain.includes('netflix.com') && !currentDomain.includes('hulu.com')) {
+  // Set up a MutationObserver to handle dynamically loaded content
+  const observer = new MutationObserver(() => {
     removeVideos();
     muteAndPauseMedia();
-  }
-});
-observer.observe(document.body, { childList: true, subtree: true });
+  });
+  observer.observe(document.body, { childList: true, subtree: true });
 
-// Block audio context except for Netflix and Hulu
-const originalAudioContext = window.AudioContext || window.webkitAudioContext;
-window.AudioContext = window.webkitAudioContext = function() {
-  const currentDomain = window.location.hostname;
-  if (currentDomain.includes('netflix.com') || currentDomain.includes('hulu.com')) {
-    return new originalAudioContext();
-  }
-  return {
-    createMediaElementSource: function() {
-      return { connect: function() {} };
-    },
-    createGain: function() {
-      return { connect: function() {} };
-    },
-    // Add other methods as needed, returning dummy objects
+  // Block audio context except for allowed domains
+  const originalAudioContext = window.AudioContext || window.webkitAudioContext;
+  window.AudioContext = window.webkitAudioContext = function() {
+    const currentDomain = window.location.hostname;
+    if (isAllowed(currentDomain)) {
+      return new originalAudioContext();
+    }
+    return {
+      createMediaElementSource: function() {
+        return { connect: function() {} };
+      },
+      createGain: function() {
+        return { connect: function() {} };
+      },
+      // Add other methods as needed, returning dummy objects
+    };
   };
-};
 
-// Intercept play attempts
-const originalPlay = HTMLMediaElement.prototype.play;
-HTMLMediaElement.prototype.play = function() {
-  const currentDomain = window.location.hostname;
-  if (currentDomain.includes('netflix.com') || currentDomain.includes('hulu.com')) {
-    return originalPlay.apply(this); // Allow play on Netflix and Hulu
-  }
-  this.pause();
-  this.muted = true;
-  return Promise.reject(new DOMException('Play prevented by extension', 'NotAllowedError'));
-};
+  // Intercept play attempts
+  const originalPlay = HTMLMediaElement.prototype.play;
+  HTMLMediaElement.prototype.play = function() {
+    const currentDomain = window.location.hostname;
+    if (isAllowed(currentDomain)) {
+      return originalPlay.apply(this);
+    }
+    this.pause();
+    this.muted = true;
+    return Promise.reject(new DOMException('Play prevented by extension', 'NotAllowedError'));
+  };
+});

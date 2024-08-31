@@ -4,7 +4,9 @@
   "version": "1.1",
   "description": "Blocks YouTube and TikTok videos across all websites and search engines.",
   "permissions": [
-    "declarativeNetRequest"
+    "declarativeNetRequest",
+    "storage",
+    "declarativeNetRequestFeedback"
   ],
   "host_permissions": [
     "<all_urls>"
@@ -14,11 +16,7 @@
     "type": "module"
   },
   "declarative_net_request": {
-    "rule_resources": [{
-      "id": "ruleset_1",
-      "enabled": true,
-      "path": "rules.json"
-    }]
+    "rule_resources": []
   },
   "content_scripts": [
     {
@@ -28,5 +26,6 @@
   ],
   "icons": {
     "128": "icon.png"
-  }
+  },
+  "options_page": "options.html"
 }
