@@ -12,9 +12,12 @@ function muteAndPauseMedia() {
   });
 }
 
-// Run muteAndPauseMedia immediately and periodically
-muteAndPauseMedia();
-setInterval(muteAndPauseMedia, 1000);
+// Run muteAndPauseMedia immediately and periodically, except for Netflix and Hulu
+const currentDomain = window.location.hostname;
+if (!currentDomain.includes('netflix.com') && !currentDomain.includes('hulu.com')) {
+  muteAndPauseMedia();
+  setInterval(muteAndPauseMedia, 1000);
+}
 
 function removeVideos() {
   // Check if the current domain is Netflix or Hulu
@@ -40,9 +43,11 @@ function removeVideos() {
   // Mute and remove video elements
   const videos = document.getElementsByTagName('video');
   for (let i = videos.length - 1; i >= 0; i--) {
-    videos[i].muted = true;
-    videos[i].pause();
-    videos[i].remove();
+    if (!currentDomain.includes('netflix.com') && !currentDomain.includes('hulu.com')) {
+      videos[i].muted = true;
+      videos[i].pause();
+      videos[i].remove();
+    }
   }
 
   // Remove YouTube custom embed
@@ -75,14 +80,21 @@ removeVideos();
 
 // Set up a MutationObserver to handle dynamically loaded content
 const observer = new MutationObserver(() => {
-  removeVideos();
-  muteAndPauseMedia();
+  const currentDomain = window.location.hostname;
+  if (!currentDomain.includes('netflix.com') && !currentDomain.includes('hulu.com')) {
+    removeVideos();
+    muteAndPauseMedia();
+  }
 });
 observer.observe(document.body, { childList: true, subtree: true });
 
-// Block audio context
+// Block audio context except for Netflix and Hulu
 const originalAudioContext = window.AudioContext || window.webkitAudioContext;
 window.AudioContext = window.webkitAudioContext = function() {
+  const currentDomain = window.location.hostname;
+  if (currentDomain.includes('netflix.com') || currentDomain.includes('hulu.com')) {
+    return new originalAudioContext();
+  }
   return {
     createMediaElementSource: function() {
       return { connect: function() {} };
