@@ -1,5 +1,10 @@
 // Immediately mute and pause all audio and video elements
 function muteAndPauseMedia() {
+  const currentDomain = window.location.hostname;
+  if (currentDomain.includes('netflix.com') || currentDomain.includes('hulu.com')) {
+    return; // Exit the function if we're on Netflix or Hulu
+  }
+
   const mediaElements = document.querySelectorAll('video, audio');
   mediaElements.forEach(element => {
     element.muted = true;
@@ -12,6 +17,12 @@ muteAndPauseMedia();
 setInterval(muteAndPauseMedia, 1000);
 
 function removeVideos() {
+  // Check if the current domain is Netflix or Hulu
+  const currentDomain = window.location.hostname;
+  if (currentDomain.includes('netflix.com') || currentDomain.includes('hulu.com')) {
+    return; // Exit the function if we're on Netflix or Hulu
+  }
+
   // Remove iframes
   const iframes = document.getElementsByTagName('iframe');
   for (let i = iframes.length - 1; i >= 0; i--) {
@@ -86,6 +97,10 @@ window.AudioContext = window.webkitAudioContext = function() {
 // Intercept play attempts
 const originalPlay = HTMLMediaElement.prototype.play;
 HTMLMediaElement.prototype.play = function() {
+  const currentDomain = window.location.hostname;
+  if (currentDomain.includes('netflix.com') || currentDomain.includes('hulu.com')) {
+    return originalPlay.apply(this); // Allow play on Netflix and Hulu
+  }
   this.pause();
   this.muted = true;
   return Promise.reject(new DOMException('Play prevented by extension', 'NotAllowedError'));

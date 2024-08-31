@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Simple Video Blocker for Kids",
-  "version": "1.0",
+  "version": "1.1",
   "description": "Blocks YouTube and TikTok videos across all websites and search engines.",
   "permissions": [
     "declarativeNetRequest"
