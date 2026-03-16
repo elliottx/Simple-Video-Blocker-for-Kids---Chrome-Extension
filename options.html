@@ -1,30 +1,284 @@
 <!DOCTYPE html>
-<html>
-
+<html lang="en">
 <head>
-    <title>Video Blocker Settings</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Video Blocker Settings</title>
+    <link rel="stylesheet" href="options.css">
 </head>
-
 <body>
-    <h1>Video Blocker Settings</h1>
-    <label>
-        <input type="checkbox" id="allowHulu"> Allow Hulu
-    </label>
-    <br>
-    <label>
-        <input type="checkbox" id="allowNetflix"> Allow Netflix
-    </label>
-    <br>
-    <label>
-        <input type="checkbox" id="allowYouTube"> Allow YouTube
-    </label>
-    <br>
-    <label>
-        <input type="checkbox" id="allowTikTok"> Allow TikTok
-    </label>
-    <br>
-    <button id="save">Save</button>
+    <div class="container">
+        <header>
+            <div class="header-content">
+                <h1>Simple Video Blocker for Kids</h1>
+                <p class="subtitle">Control which video platforms are accessible</p>
+                <div class="toggle-legend">
+                    <span class="legend-item">
+                        <span class="legend-indicator blocked"></span>
+                        ON = Blocked
+                    </span>
+                    <span class="legend-item">
+                        <span class="legend-indicator allowed"></span>
+                        OFF = Allowed
+                    </span>
+                </div>
+            </div>
+        </header>
+
+        <main>
+            <!-- PIN Lock Overlay -->
+            <div id="pinLockOverlay" class="pin-overlay" style="display: none;">
+                <div class="pin-container">
+                    <h3>Enter PIN to Access Settings</h3>
+                    <div class="pin-input-group">
+                        <input type="password" id="pinInput" class="pin-input" maxlength="4" placeholder="••••" autocomplete="off">
+                    </div>
+                    <div id="pinError" class="pin-error" style="display: none;"></div>
+                    <button id="pinSubmit" class="btn-primary">Unlock</button>
+                    <div class="pin-forgot">
+                        <a href="#" id="forgotPin" style="display: none;">Forgot PIN?</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PIN Setup Section -->
+            <section class="settings-section" id="pinSection">
+                <h2>🔒 Parental Controls</h2>
+                <div class="settings-group">
+                    <div class="setting-item">
+                        <div class="setting-info">
+                            <h3>PIN Protection</h3>
+                            <p id="pinStatus">No PIN set - Settings are unprotected</p>
+                        </div>
+                        <button id="pinSetupBtn" class="btn-secondary">Set PIN</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Time Management Section -->
+            <section class="settings-section">
+                <h2>⏰ Time Management</h2>
+                <div class="settings-group">
+                    <div class="setting-item">
+                        <div class="setting-info">
+                            <h3>Daily Video Timer</h3>
+                            <p>Set how much video time is allowed today</p>
+                        </div>
+                        <div class="time-controls">
+                            <select id="dailyHours" class="time-select">
+                                <option value="0">No videos allowed</option>
+                                <option value="0.5">30 minutes</option>
+                                <option value="1">1 hour</option>
+                                <option value="1.5">1 hour 30 minutes</option>
+                                <option value="2">2 hours</option>
+                                <option value="3">3 hours</option>
+                                <option value="4">4 hours</option>
+                                <option value="5">5 hours</option>
+                                <option value="6">6 hours (maximum)</option>
+                            </select>
+                            <span class="time-remaining" id="timeRemaining"></span>
+                        </div>
+                        <div class="timer-info">
+                            <span id="timerStatus" class="timer-status"></span>
+                        </div>
+                    </div>
+
+                    <div class="setting-item">
+                        <div class="setting-info">
+                            <h3>Weekly Schedule</h3>
+                            <p>Set allowed times for each day</p>
+                        </div>
+                        <button id="scheduleBtn" class="btn-secondary">Configure Schedule</button>
+                    </div>
+                </div>
+
+                <!-- Schedule Modal -->
+                <div id="scheduleModal" class="schedule-modal" style="display: none;">
+                    <div class="schedule-container">
+                        <h3>Weekly Video Schedule</h3>
+                        <div class="schedule-grid" id="scheduleGrid">
+                            <!-- Will be populated by JavaScript -->
+                        </div>
+                        <div class="schedule-actions">
+                            <button id="scheduleSave" class="btn-primary">Save Schedule</button>
+                            <button id="scheduleCancel" class="btn-secondary">Cancel</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="settings-section">
+                <h2>Video Platforms</h2>
+                <div class="settings-group">
+                    <div class="setting-item">
+                        <div class="setting-info">
+                            <div class="platform-header">
+                                <span class="platform-icon youtube">▶</span>
+                                <h3>YouTube</h3>
+                            </div>
+                            <p>Block YouTube videos and embedded content</p>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="blockYouTube">
+                            <span class="slider"></span>
+                            <span class="toggle-label blocked">BLOCKED</span>
+                            <span class="toggle-label allowed">ALLOWED</span>
+                        </label>
+                    </div>
+
+                    <div class="setting-item">
+                        <div class="setting-info">
+                            <div class="platform-header">
+                                <span class="platform-icon tiktok">♪</span>
+                                <h3>TikTok</h3>
+                            </div>
+                            <p>Block TikTok videos and embedded content</p>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="blockTikTok">
+                            <span class="slider"></span>
+                            <span class="toggle-label blocked">BLOCKED</span>
+                            <span class="toggle-label allowed">ALLOWED</span>
+                        </label>
+                    </div>
+                </div>
+            </section>
+
+            <section class="settings-section">
+                <h2>Streaming Services <span class="beta-badge">BETA</span></h2>
+                <div class="settings-group">
+                    <div class="setting-item beta-feature">
+                        <div class="setting-info">
+                            <div class="platform-header">
+                                <span class="platform-icon netflix">N</span>
+                                <h3>Netflix <span class="feature-badge beta">BETA</span></h3>
+                            </div>
+                            <p>Block Netflix streaming content (experimental)</p>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="blockNetflix">
+                            <span class="slider"></span>
+                            <span class="toggle-label blocked">BLOCKED</span>
+                            <span class="toggle-label allowed">ALLOWED</span>
+                        </label>
+                    </div>
+
+                    <div class="setting-item beta-feature">
+                        <div class="setting-info">
+                            <div class="platform-header">
+                                <span class="platform-icon hulu">H</span>
+                                <h3>Hulu <span class="feature-badge beta">BETA</span></h3>
+                            </div>
+                            <p>Block Hulu streaming content (experimental)</p>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="blockHulu">
+                            <span class="slider"></span>
+                            <span class="toggle-label blocked">BLOCKED</span>
+                            <span class="toggle-label allowed">ALLOWED</span>
+                        </label>
+                    </div>
+                </div>
+            </section>
+
+            <div class="save-status" id="saveStatus"></div>
+        </main>
+
+        <footer>
+            <div class="footer-section">
+                <p>Changes are saved automatically</p>
+                <div class="feedback-section">
+                    <button class="feedback-btn" id="feedbackBtn">📝 Share Feedback & Report Issues</button>
+                    <button class="review-btn" id="reviewBtn">⭐ Love this extension? Leave a review!</button>
+                </div>
+                <p class="version">Version 1.2</p>
+            </div>
+        </footer>
+
+        <!-- Feedback Modal -->
+        <div class="modal-overlay" id="feedbackModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Share Your Feedback</h3>
+                    <button class="close-btn" id="closeFeedback">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div class="feedback-tabs">
+                        <button class="tab-btn active" data-tab="general">General Feedback</button>
+                        <button class="tab-btn" data-tab="beta">Beta Features</button>
+                        <button class="tab-btn" data-tab="issue">Report Issue</button>
+                    </div>
+                    
+                    <div class="tab-content" id="generalTab">
+                        <textarea id="generalFeedback" placeholder="Tell us how we can improve the extension..."></textarea>
+                        <div class="rating-section">
+                            <label>How would you rate this extension?</label>
+                            <div class="star-rating" id="generalRating">
+                                <span class="star" data-rating="1">⭐</span>
+                                <span class="star" data-rating="2">⭐</span>
+                                <span class="star" data-rating="3">⭐</span>
+                                <span class="star" data-rating="4">⭐</span>
+                                <span class="star" data-rating="5">⭐</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="tab-content" id="betaTab" style="display: none;">
+                        <div class="beta-feedback-options">
+                            <label>Which beta features have you tested?</label>
+                            <div class="checkbox-group">
+                                <label class="checkbox-item">
+                                    <input type="checkbox" name="betaFeature" value="netflix"> Netflix blocking
+                                </label>
+                                <label class="checkbox-item">
+                                    <input type="checkbox" name="betaFeature" value="hulu"> Hulu blocking
+                                </label>
+                            </div>
+                        </div>
+                        <textarea id="betaFeedback" placeholder="How well did the beta features work for you? Any issues or suggestions?"></textarea>
+                        <div class="rating-section">
+                            <label>How would you rate the beta features?</label>
+                            <div class="star-rating" id="betaRating">
+                                <span class="star" data-rating="1">⭐</span>
+                                <span class="star" data-rating="2">⭐</span>
+                                <span class="star" data-rating="3">⭐</span>
+                                <span class="star" data-rating="4">⭐</span>
+                                <span class="star" data-rating="5">⭐</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="tab-content" id="issueTab" style="display: none;">
+                        <div class="issue-form">
+                            <label>Issue Type</label>
+                            <select id="issueType">
+                                <option value="">Select issue type...</option>
+                                <option value="blocking-failed">Platform not being blocked</option>
+                                <option value="blocking-wrong">Platform blocked when should be allowed</option>
+                                <option value="settings-broken">Settings not saving</option>
+                                <option value="performance">Performance issues</option>
+                                <option value="ui-bug">User interface bug</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                        <textarea id="issueDescription" placeholder="Describe the issue in detail. Include what you were doing when it happened and what you expected vs. what actually happened."></textarea>
+                        <div class="system-info">
+                            <label>
+                                <input type="checkbox" id="includeSystemInfo" checked>
+                                Include system information (browser version, OS, etc.)
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn-secondary" id="cancelFeedback">Cancel</button>
+                    <button class="btn-primary" id="submitFeedback">Send Feedback</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="parental-controls.js"></script>
     <script src="options.js"></script>
 </body>
-
 </html>

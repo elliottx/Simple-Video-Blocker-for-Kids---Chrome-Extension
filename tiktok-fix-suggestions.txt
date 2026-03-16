@@ -1,0 +1,37 @@
+
+// Enhanced TikTok domain coverage for background.js
+if (!result.allowTikTok) {
+  newRules.push(
+    createRule('*tiktok.com/*', ['sub_frame', 'media', 'xmlhttprequest', 'object', 'other']),
+    createRule('*vm.tiktok.com/*', ['sub_frame', 'media', 'xmlhttprequest', 'object', 'other']),
+    createRule('*vt.tiktok.com/*', ['sub_frame', 'media', 'xmlhttprequest', 'object', 'other']),
+    createRule('*tiktokv.com/*', ['media', 'xmlhttprequest', 'other']),
+    createRule('*tiktokcdn.com/*', ['media', 'xmlhttprequest', 'other']),
+    createRule('*musical.ly/*', ['sub_frame', 'media', 'xmlhttprequest', 'object', 'other'])
+  );
+}
+
+// Enhanced domain checking for content.js
+function isBlockedDomain(domain) {
+  return (
+    (domain.includes('hulu.com') && !settings.allowHulu) ||
+    (domain.includes('netflix.com') && !settings.allowNetflix) ||
+    ((domain.includes('youtube.com') || domain.includes('youtu.be')) && !settings.allowYouTube) ||
+    ((domain.includes('tiktok.com') || domain.includes('musical.ly')) && !settings.allowTikTok)
+  );
+}
+
+// More thorough TikTok iframe removal
+if (!settings.allowTikTok) {
+  const tiktokSelectors = [
+    'iframe[src*="tiktok.com"]',
+    'iframe[src*="vm.tiktok.com"]', 
+    'iframe[src*="vt.tiktok.com"]',
+    'iframe[src*="musical.ly"]'
+  ];
+  
+  tiktokSelectors.forEach(selector => {
+    const elements = document.querySelectorAll(selector);
+    elements.forEach(el => el.remove());
+  });
+}

@@ -1,0 +1,59 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Extension Test Page</title>
+    <meta charset="UTF-8">
+</head>
+<body>
+    <h1>Video Blocker Test Page</h1>
+    
+    <!-- Test videos that should be blocked -->
+    <div id="test-videos">
+        <video id="video1" controls autoplay muted>
+            <source src="sample.mp4" type="video/mp4">
+        </video>
+        
+        <video id="video2" controls>
+            <source src="sample2.mp4" type="video/mp4">
+        </video>
+    </div>
+    
+    <!-- Test audio that should be muted -->
+    <div id="test-audio">
+        <audio id="audio1" controls>
+            <source src="sample.mp3" type="audio/mpeg">
+        </audio>
+    </div>
+    
+    <!-- Test embeds that should be removed -->
+    <div id="test-embeds">
+        <iframe src="https://www.youtube.com/embed/testid1" width="560" height="315"></iframe>
+        <iframe src="https://www.youtube-nocookie.com/embed/testid2" width="560" height="315"></iframe>
+        <iframe src="https://www.tiktok.com/embed/v2/testid3" width="325" height="580"></iframe>
+    </div>
+    
+    <!-- Custom elements -->
+    <yt-embed video-id="testid4"></yt-embed>
+    
+    <script>
+        // Test script to verify blocking
+        window.testResults = {
+            videosFound: document.querySelectorAll('video').length,
+            audiosFound: document.querySelectorAll('audio').length,
+            iframesFound: document.querySelectorAll('iframe').length,
+            customElementsFound: document.querySelectorAll('yt-embed').length
+        };
+        
+        // Simulate dynamic content loading
+        setTimeout(() => {
+            const dynamicVideo = document.createElement('video');
+            dynamicVideo.id = 'dynamic-video';
+            dynamicVideo.controls = true;
+            dynamicVideo.src = 'dynamic.mp4';
+            document.getElementById('test-videos').appendChild(dynamicVideo);
+        }, 2000);
+    </script>
+</body>
+</html>
+    

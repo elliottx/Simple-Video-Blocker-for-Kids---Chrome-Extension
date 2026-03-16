@@ -1,0 +1,37 @@
+{
+  "testTimeout": 30000,
+  "retryAttempts": 3,
+  "browserOptions": {
+    "headless": false,
+    "devtools": false,
+    "slowMo": 100
+  },
+  "testUrls": {
+    "youtube": [
+      "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+      "https://youtu.be/dQw4w9WgXcQ",
+      "https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ"
+    ],
+    "tiktok": [
+      "https://www.tiktok.com/@user/video/7234567890123456789"
+    ],
+    "netflix": [
+      "https://www.netflix.com/title/70143836"
+    ],
+    "hulu": [
+      "https://www.hulu.com/watch/1234567"
+    ]
+  },
+  "expectedBlockedDomains": [
+    "youtube.com",
+    "youtu.be",
+    "youtube-nocookie.com",
+    "googlevideo.com",
+    "tiktok.com",
+    "netflix.com",
+    "nflxvideo.net",
+    "nflxso.net",
+    "hulu.com",
+    "hulustream.com"
+  ]
+}

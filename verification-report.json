@@ -1,0 +1,321 @@
+{
+  "summary": {
+    "total": 62,
+    "passed": 62,
+    "failed": 0,
+    "successRate": 100
+  },
+  "results": [
+    {
+      "test": "manifest.json exists",
+      "passed": true,
+      "details": null
+    },
+    {
+      "test": "manifest.json has content",
+      "passed": true,
+      "details": "761 bytes"
+    },
+    {
+      "test": "background.js exists",
+      "passed": true,
+      "details": null
+    },
+    {
+      "test": "background.js has content",
+      "passed": true,
+      "details": "9226 bytes"
+    },
+    {
+      "test": "content.js exists",
+      "passed": true,
+      "details": null
+    },
+    {
+      "test": "content.js has content",
+      "passed": true,
+      "details": "6872 bytes"
+    },
+    {
+      "test": "options.html exists",
+      "passed": true,
+      "details": null
+    },
+    {
+      "test": "options.html has content",
+      "passed": true,
+      "details": "4863 bytes"
+    },
+    {
+      "test": "options.js exists",
+      "passed": true,
+      "details": null
+    },
+    {
+      "test": "options.js has content",
+      "passed": true,
+      "details": "6640 bytes"
+    },
+    {
+      "test": "options.css exists",
+      "passed": true,
+      "details": null
+    },
+    {
+      "test": "options.css has content",
+      "passed": true,
+      "details": "5132 bytes"
+    },
+    {
+      "test": "icon.png exists",
+      "passed": true,
+      "details": null
+    },
+    {
+      "test": "icon.png has content",
+      "passed": true,
+      "details": "30375 bytes"
+    },
+    {
+      "test": "Manifest is valid JSON",
+      "passed": true,
+      "details": null
+    },
+    {
+      "test": "Manifest version 3",
+      "passed": true,
+      "details": null
+    },
+    {
+      "test": "Extension name set",
+      "passed": true,
+      "details": "Simple Video Blocker for Kids"
+    },
+    {
+      "test": "Version specified",
+      "passed": true,
+      "details": "1.1"
+    },
+    {
+      "test": "Permission: declarativeNetRequest",
+      "passed": true,
+      "details": null
+    },
+    {
+      "test": "Permission: storage",
+      "passed": true,
+      "details": null
+    },
+    {
+      "test": "Permission: tabs",
+      "passed": true,
+      "details": null
+    },
+    {
+      "test": "Background script defined",
+      "passed": true,
+      "details": null
+    },
+    {
+      "test": "Content scripts defined",
+      "passed": true,
+      "details": null
+    },
+    {
+      "test": "Options page defined",
+      "passed": true,
+      "details": null
+    },
+    {
+      "test": "Action defined",
+      "passed": true,
+      "details": null
+    },
+    {
+      "test": "Has updateRules function",
+      "passed": true,
+      "details": null
+    },
+    {
+      "test": "Has updateBadge function",
+      "passed": true,
+      "details": null
+    },
+    {
+      "test": "Has removeAllRules function",
+      "passed": true,
+      "details": null
+    },
+    {
+      "test": "Uses declarativeNetRequest",
+      "passed": true,
+      "details": null
+    },
+    {
+      "test": "Uses storage API",
+      "passed": true,
+      "details": null
+    },
+    {
+      "test": "Uses action API",
+      "passed": true,
+      "details": null
+    },
+    {
+      "test": "Blocks youtube.com",
+      "passed": true,
+      "details": null
+    },
+    {
+      "test": "Blocks tiktok.com",
+      "passed": true,
+      "details": null
+    },
+    {
+      "test": "Blocks netflix.com",
+      "passed": true,
+      "details": null
+    },
+    {
+      "test": "Blocks hulu.com",
+      "passed": true,
+      "details": null
+    },
+    {
+      "test": "Has error handling",
+      "passed": true,
+      "details": null
+    },
+    {
+      "test": "Checks chrome.runtime.lastError",
+      "passed": true,
+      "details": null
+    },
+    {
+      "test": "Has loadSettings function",
+      "passed": true,
+      "details": null
+    },
+    {
+      "test": "Has removeVideos function",
+      "passed": true,
+      "details": null
+    },
+    {
+      "test": "Has muteAndPauseMedia function",
+      "passed": true,
+      "details": null
+    },
+    {
+      "test": "Blocks video elements",
+      "passed": true,
+      "details": null
+    },
+    {
+      "test": "Blocks audio elements",
+      "passed": true,
+      "details": null
+    },
+    {
+      "test": "Removes iframes",
+      "passed": true,
+      "details": null
+    },
+    {
+      "test": "Intercepts play method",
+      "passed": true,
+      "details": null
+    },
+    {
+      "test": "Uses MutationObserver",
+      "passed": true,
+      "details": null
+    },
+    {
+      "test": "Has error handling",
+      "passed": true,
+      "details": null
+    },
+    {
+      "test": "Options HTML is valid",
+      "passed": true,
+      "details": null
+    },
+    {
+      "test": "Has platform toggles",
+      "passed": true,
+      "details": null
+    },
+    {
+      "test": "Includes CSS",
+      "passed": true,
+      "details": null
+    },
+    {
+      "test": "Includes JS",
+      "passed": true,
+      "details": null
+    },
+    {
+      "test": "Options JS has loadSettings",
+      "passed": true,
+      "details": null
+    },
+    {
+      "test": "Options JS has saveSettings",
+      "passed": true,
+      "details": null
+    },
+    {
+      "test": "Options JS handles events",
+      "passed": true,
+      "details": null
+    },
+    {
+      "test": "Options JS shows notifications",
+      "passed": true,
+      "details": null
+    },
+    {
+      "test": "Options CSS exists",
+      "passed": true,
+      "details": null
+    },
+    {
+      "test": "Has toggle styles",
+      "passed": true,
+      "details": null
+    },
+    {
+      "test": "Has responsive design",
+      "passed": true,
+      "details": null
+    },
+    {
+      "test": "Netflix blocking implemented",
+      "passed": true,
+      "details": null
+    },
+    {
+      "test": "Hulu blocking implemented",
+      "passed": true,
+      "details": null
+    },
+    {
+      "test": "Comprehensive error handling added",
+      "passed": true,
+      "details": null
+    },
+    {
+      "test": "Badge management implemented",
+      "passed": true,
+      "details": null
+    },
+    {
+      "test": "Extension icon click handler added",
+      "passed": true,
+      "details": null
+    }
+  ],
+  "timestamp": "2025-08-31T23:14:41.690Z"
+}

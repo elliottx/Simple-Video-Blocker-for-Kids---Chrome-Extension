@@ -1,0 +1,17 @@
+CHROME WEB STORE PERMISSION JUSTIFICATIONS
+==========================================
+
+declarativeNetRequest justification:
+The declarativeNetRequest permission enables this extension to block YouTube and TikTok video content across all websites by creating network-level filtering rules. This is the core parental control functionality that prevents unwanted video content from loading. The extension uses this permission exclusively for content blocking purposes and does not monitor, collect, or transmit any user browsing data. All blocking rules are processed locally within the browser for maximum privacy and security.
+
+storage justification:
+The storage permission allows the extension to save your blocking preferences (which platforms to block or allow) locally in your browser. This data remains entirely on your device and is never transmitted to external servers. The extension uses Chrome's secure storage API to remember your settings between browser sessions, ensuring your parental control preferences persist. No personal information, browsing history, or user data is collected or stored - only your platform blocking choices.
+
+declarativeNetRequestFeedback justification:
+The declarativeNetRequestFeedback permission provides diagnostic information about the effectiveness of content blocking rules. This permission helps ensure the extension's blocking functionality works correctly across different websites and scenarios. The feedback is used purely for internal optimization of blocking performance and is not shared externally. This permission enhances the reliability of parental controls by allowing the extension to verify that blocking rules are functioning as intended.
+
+tabs justification:
+The tabs permission enables the extension to refresh affected browser tabs when you change blocking settings, ensuring new preferences take effect immediately without manual page reloads. This permission also allows the extension to display the current blocking status in the browser toolbar badge. The extension only accesses tab information necessary for these specific functions and does not monitor, track, or collect any browsing data or personal information from your tabs.
+
+Host permission justification:
+The <all_urls> host permission is essential for comprehensive parental control functionality, allowing the extension to block YouTube and TikTok videos embedded across any website on the internet. This broad permission ensures effective content filtering regardless of where video content appears - from social media sites to news articles to educational platforms. The extension uses this access solely for content blocking purposes and does not collect, monitor, or transmit any user data or browsing information.

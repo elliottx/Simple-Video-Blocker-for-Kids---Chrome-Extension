@@ -1,21 +1,327 @@
 document.addEventListener('DOMContentLoaded', () => {
-    const checkboxes = ['allowHulu', 'allowNetflix', 'allowYouTube', 'allowTikTok'];
+    const platforms = ['YouTube', 'TikTok', 'Netflix', 'Hulu'];
+    const saveStatus = document.getElementById('saveStatus');
+    let saveTimeout;
+    
+    // Initialize Parental Controls
+    const parentalControls = new ParentalControls();
 
-    // Load saved settings
-    chrome.storage.sync.get(checkboxes, (result) => {
-        checkboxes.forEach(id => {
-            document.getElementById(id).checked = result[id] || false;
+    function showSaveStatus(message, isSuccess = true) {
+        saveStatus.textContent = message;
+        saveStatus.style.background = isSuccess ? '#4CAF50' : '#f44336';
+        saveStatus.classList.add('show');
+        
+        clearTimeout(saveTimeout);
+        saveTimeout = setTimeout(() => {
+            saveStatus.classList.remove('show');
+        }, 2000);
+    }
+
+    function loadSettings() {
+        const storageKeys = platforms.map(p => `allow${p}`);
+        
+        try {
+            chrome.storage.sync.get(storageKeys, (result) => {
+                if (chrome.runtime.lastError) {
+                    console.error('Error loading settings:', chrome.runtime.lastError.message);
+                    showSaveStatus('Error loading settings', false);
+                    return;
+                }
+                
+                platforms.forEach(platform => {
+                    const blockCheckbox = document.getElementById(`block${platform}`);
+                    const allowKey = `allow${platform}`;
+                    
+                    if (blockCheckbox) {
+                        // If allowPlatform is undefined (first install), default to false (blocked)
+                        const isAllowed = result[allowKey] !== undefined ? result[allowKey] : false;
+                        // Checkbox is checked when platform is blocked (inverted)
+                        blockCheckbox.checked = !isAllowed;
+                        updateToggleState(blockCheckbox);
+                    }
+                });
+            });
+        } catch (error) {
+            console.error('Exception in loadSettings:', error);
+            showSaveStatus('Error loading settings', false);
+        }
+    }
+
+    function updateToggleState(checkbox) {
+        const settingItem = checkbox.closest('.setting-item');
+        if (settingItem) {
+            if (checkbox.checked) {
+                // Checked = Blocked (red tint)
+                settingItem.style.background = '#ffebee';
+            } else {
+                // Unchecked = Allowed (green tint)
+                settingItem.style.background = '#e8f5e9';
+            }
+        }
+    }
+
+    function saveSettings(platform) {
+        try {
+            const blockCheckbox = document.getElementById(`block${platform}`);
+            if (!blockCheckbox) {
+                console.error(`Checkbox not found for platform: ${platform}`);
+                showSaveStatus('Error: Invalid platform', false);
+                return;
+            }
+            
+            const isBlocked = blockCheckbox.checked;
+            const allowKey = `allow${platform}`;
+            
+            // Validate platform name
+            if (!platforms.includes(platform)) {
+                console.error(`Invalid platform: ${platform}`);
+                showSaveStatus('Error: Invalid platform', false);
+                return;
+            }
+            
+            // Store as allow value (inverted from UI)
+            const settings = {
+                [allowKey]: !isBlocked
+            };
+            
+            chrome.storage.sync.set(settings, () => {
+                if (chrome.runtime.lastError) {
+                    showSaveStatus('Error saving settings', false);
+                    console.error('Error saving settings:', chrome.runtime.lastError);
+                } else {
+                    const status = isBlocked ? 'blocked' : 'allowed';
+                    showSaveStatus(`${platform} ${status}`, true);
+                }
+            });
+        } catch (error) {
+            console.error('Exception in saveSettings:', error);
+            showSaveStatus('Error saving settings', false);
+        }
+    }
+
+    // Initialize default values on first install
+    function initializeDefaults() {
+        const storageKeys = platforms.map(p => `allow${p}`);
+        
+        try {
+            chrome.storage.sync.get(storageKeys, (result) => {
+                if (chrome.runtime.lastError) {
+                    console.error('Error reading storage for defaults:', chrome.runtime.lastError.message);
+                    showSaveStatus('Error initializing settings', false);
+                    return;
+                }
+                
+                const defaults = {};
+                let needsDefaults = false;
+                
+                platforms.forEach(platform => {
+                    const allowKey = `allow${platform}`;
+                    if (result[allowKey] === undefined) {
+                        // Set platform-specific defaults
+                        if (platform === 'Netflix' || platform === 'Hulu') {
+                            defaults[allowKey] = true; // Netflix and Hulu allowed by default
+                        } else {
+                            defaults[allowKey] = false; // YouTube and TikTok blocked by default
+                        }
+                        needsDefaults = true;
+                    }
+                });
+                
+                if (needsDefaults) {
+                    chrome.storage.sync.set(defaults, () => {
+                        if (chrome.runtime.lastError) {
+                            console.error('Error setting defaults:', chrome.runtime.lastError.message);
+                            showSaveStatus('Error initializing settings', false);
+                        } else {
+                            console.log('Default settings initialized: YouTube/TikTok blocked, Netflix/Hulu allowed');
+                            loadSettings();
+                        }
+                    });
+                } else {
+                    loadSettings();
+                }
+            });
+        } catch (error) {
+            console.error('Exception in initializeDefaults:', error);
+            showSaveStatus('Error initializing settings', false);
+        }
+    }
+
+    // Initialize settings
+    initializeDefaults();
+
+    // Add event listeners for each platform
+    platforms.forEach(platform => {
+        const checkbox = document.getElementById(`block${platform}`);
+        if (checkbox) {
+            checkbox.addEventListener('change', (e) => {
+                updateToggleState(e.target);
+                saveSettings(platform);
+            });
+        }
+    });
+
+    // Click anywhere on setting item to toggle
+    const settingItems = document.querySelectorAll('.setting-item');
+    settingItems.forEach(item => {
+        item.addEventListener('click', (e) => {
+            if (!e.target.closest('.toggle-switch')) {
+                const toggle = item.querySelector('input[type="checkbox"]');
+                if (toggle) {
+                    toggle.checked = !toggle.checked;
+                    toggle.dispatchEvent(new Event('change'));
+                }
+            }
         });
     });
 
-    // Save settings
-    document.getElementById('save').addEventListener('click', () => {
-        const settings = {};
-        checkboxes.forEach(id => {
-            settings[id] = document.getElementById(id).checked;
+    // Feedback System - Direct link to Google Form
+    const feedbackBtn = document.getElementById('feedbackBtn');
+    const reviewBtn = document.getElementById('reviewBtn');
+    
+    // Event listener - Direct link to Google Form
+    feedbackBtn.addEventListener('click', () => {
+        window.open('https://docs.google.com/forms/d/e/1FAIpQLSfd-ZUiDCOylX7BTwNpnS-_A2Da-UBtVFnb2idDjmNfdBcU9Q/viewform?usp=dialog', '_blank');
+    });
+    
+    // Event listener - Direct link to Chrome Web Store reviews
+    reviewBtn.addEventListener('click', () => {
+        window.open('https://chromewebstore.google.com/detail/simple-video-blocker-for/gilffjhghogfgfdjinemcccoealbnoeg/reviews', '_blank');
+    });
+    
+    // PIN Protection Setup
+    const pinSetupBtn = document.getElementById('pinSetupBtn');
+    const pinStatus = document.getElementById('pinStatus');
+    
+    // Check if PIN is set
+    function updatePINStatus() {
+        chrome.storage.sync.get(['parentalPIN'], (result) => {
+            if (result.parentalPIN) {
+                pinStatus.textContent = 'PIN protection is active';
+                pinSetupBtn.textContent = 'Change PIN';
+            } else {
+                pinStatus.textContent = 'No PIN set - Settings are unprotected';
+                pinSetupBtn.textContent = 'Set PIN';
+            }
         });
-        chrome.storage.sync.set(settings, () => {
-            alert('Settings saved');
-        });
+    }
+    
+    updatePINStatus();
+    
+    pinSetupBtn.addEventListener('click', async () => {
+        const authorized = await parentalControls.checkPIN();
+        if (!authorized) return;
+        
+        const newPIN = prompt('Enter a new 4-digit PIN:');
+        if (!newPIN) return;
+        
+        if (newPIN.length !== 4 || !/^\d+$/.test(newPIN)) {
+            alert('PIN must be exactly 4 digits');
+            return;
+        }
+        
+        const confirmPIN = prompt('Confirm your PIN:');
+        if (newPIN !== confirmPIN) {
+            alert('PINs do not match');
+            return;
+        }
+        
+        const success = await parentalControls.setPIN(newPIN);
+        if (success) {
+            showSaveStatus('PIN set successfully', true);
+            updatePINStatus();
+        } else {
+            showSaveStatus('Error setting PIN', false);
+        }
+    });
+    
+    // Daily Time Allowance
+    const dailyHours = document.getElementById('dailyHours');
+    const timeRemaining = document.getElementById('timeRemaining');
+    
+    // Load current allowance
+    chrome.storage.sync.get(['dailyAllowance'], (result) => {
+        if (result.dailyAllowance) {
+            dailyHours.value = result.dailyAllowance;
+        }
+    });
+    
+    dailyHours.addEventListener('change', async () => {
+        const hours = parseFloat(dailyHours.value);
+        const success = await parentalControls.setDailyAllowance(hours);
+        
+        if (success) {
+            if (hours > 0) {
+                const timeLabel = hours === 0.5 ? '30 minutes' : 
+                                hours === 1.5 ? '1 hour 30 minutes' : 
+                                hours === 1 ? '1 hour' : 
+                                hours === 6 ? '6 hours (maximum)' : `${hours} hours`;
+                showSaveStatus(`✓ Timer activated: ${timeLabel}`, true);
+            } else {
+                showSaveStatus('✓ Videos blocked', true);
+            }
+            parentalControls.updateTimeDisplay();
+        } else {
+            showSaveStatus('PIN required to change time settings', false);
+            // Revert the change
+            chrome.storage.sync.get(['dailyAllowance'], (result) => {
+                dailyHours.value = result.dailyAllowance || 0;
+            });
+        }
+    });
+    
+    // Update time display
+    parentalControls.updateTimeDisplay();
+    setInterval(() => {
+        parentalControls.updateTimeDisplay();
+    }, 60000); // Update every minute
+    
+    // Weekly Schedule
+    const scheduleBtn = document.getElementById('scheduleBtn');
+    const scheduleSave = document.getElementById('scheduleSave');
+    const scheduleCancel = document.getElementById('scheduleCancel');
+    const scheduleModal = document.getElementById('scheduleModal');
+    
+    scheduleBtn.addEventListener('click', async () => {
+        const authorized = await parentalControls.checkPIN();
+        if (!authorized) {
+            showSaveStatus('PIN required to change schedule', false);
+            return;
+        }
+        parentalControls.showScheduleModal();
+    });
+    
+    scheduleSave.addEventListener('click', () => {
+        parentalControls.saveSchedule();
+        showSaveStatus('Schedule saved', true);
+    });
+    
+    scheduleCancel.addEventListener('click', () => {
+        scheduleModal.style.display = 'none';
+    });
+    
+    // Protect platform toggles with PIN
+    platforms.forEach(platform => {
+        const checkbox = document.getElementById(`block${platform}`);
+        if (checkbox) {
+            // Store the original change handler
+            const originalHandler = checkbox.onchange;
+            
+            // Replace with PIN-protected handler
+            checkbox.addEventListener('change', async (e) => {
+                const authorized = await parentalControls.checkPIN();
+                if (!authorized) {
+                    // Revert the change
+                    e.preventDefault();
+                    checkbox.checked = !checkbox.checked;
+                    showSaveStatus('PIN required to change settings', false);
+                    return;
+                }
+                
+                // Continue with original behavior
+                updateToggleState(e.target);
+                saveSettings(platform);
+            });
+        }
     });
 });
