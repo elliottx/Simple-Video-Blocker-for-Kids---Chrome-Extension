@@ -2,13 +2,15 @@
 
 A Chrome extension designed for parents to control their children's access to video content across the web. Smart defaults block high-risk platforms while allowing trusted streaming services.
 
-## 🚀 Current Version: 1.2
+## 🚀 Current Version: 1.3
 
 ## 📋 Features
 
 ### Core Blocking Functionality
 - **Network-level blocking** using Chrome's declarativeNetRequest API
 - **DOM-level blocking** for enhanced content removal
+- **Keyword blocking** - hide YouTube videos matching parent-defined keywords (case-insensitive)
+- **YouTube Shorts blocking** - hide Shorts shelves, links, and block /shorts/ URLs
 - **Smart badge indicators** showing blocking status (▶️ allowed, ⏸️ blocked)
 - **Automatic tab refresh** when settings change
 
@@ -88,6 +90,25 @@ A Chrome extension designed for parents to control their children's access to vi
 - PIN lockout system (5 minutes after 3 failed attempts)
 - Protected settings changes requiring authentication
 - Secure storage of parental control preferences
+
+### Version 1.3 (Current)
+**Major Features Added:**
+- 🔍 **Keyword Blocking**: Parents can add keywords/phrases to automatically hide YouTube videos with matching titles
+  - Add keywords via comma-separated input
+  - Visual keyword chips with one-click removal
+  - Toggle keyword blocking on/off independently
+  - Case-insensitive matching across home, search, sidebar, and channel pages
+- 🚫 **YouTube Shorts Blocking**: Complete Shorts content removal
+  - Hides Shorts shelves on YouTube home and search pages
+  - Blocks navigation to youtube.com/shorts/* URLs (network-level + redirect)
+  - Removes Shorts links and thumbnails from recommendations
+  - Hides the Shorts tab from YouTube sidebar
+
+**Technical Improvements:**
+- New content filtering system independent of platform-level blocking
+- Keyword matching via MutationObserver for dynamically loaded YouTube content
+- Shorts blocking combines declarativeNetRequest rules with DOM-level removal
+- New chrome.storage.sync keys: keywordBlockingEnabled, blockedKeywords, blockShorts
 
 ## 🛠 Technical Details
 
@@ -170,8 +191,8 @@ A Chrome extension designed for parents to control their children's access to vi
 
 ## 🔄 Development Status
 
-**Current Focus**: Version 1.2 published with advanced parental controls
-**Last Updated**: September 2025
+**Current Focus**: Version 1.3 published with keyword blocking and YouTube Shorts blocking
+**Last Updated**: March 2026
 **Active Maintenance**: Yes
 
 ---

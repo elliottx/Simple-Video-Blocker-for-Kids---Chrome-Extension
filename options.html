@@ -181,6 +181,57 @@
                 </div>
             </section>
 
+            <!-- Content Filtering Section -->
+            <section class="settings-section">
+                <h2>Content Filtering</h2>
+                <div class="settings-group">
+                    <!-- Keyword Blocking -->
+                    <div class="setting-item keyword-section">
+                        <div class="setting-info" style="width: 100%;">
+                            <div class="keyword-header">
+                                <div>
+                                    <h3>Keyword Blocklist</h3>
+                                    <p>Hide YouTube videos whose titles contain these words</p>
+                                </div>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" id="keywordBlockingEnabled">
+                                    <span class="slider"></span>
+                                    <span class="toggle-label blocked">ON</span>
+                                    <span class="toggle-label allowed">OFF</span>
+                                </label>
+                            </div>
+                            <div id="keywordControls">
+                                <div class="keyword-input-row">
+                                    <input type="text" id="keywordInput" class="keyword-input" placeholder="Enter keywords (comma-separated)">
+                                    <button id="addKeywordsBtn" class="btn-primary btn-small">Add</button>
+                                </div>
+                                <div class="keyword-chips" id="keywordChips">
+                                    <!-- Chips populated by JS -->
+                                </div>
+                                <p class="keyword-hint" id="keywordCount">No keywords set</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- YouTube Shorts Blocking -->
+                    <div class="setting-item">
+                        <div class="setting-info">
+                            <div class="platform-header">
+                                <span class="platform-icon shorts">S</span>
+                                <h3>YouTube Shorts</h3>
+                            </div>
+                            <p>Block all YouTube Shorts content and navigation</p>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="blockShorts">
+                            <span class="slider"></span>
+                            <span class="toggle-label blocked">BLOCKED</span>
+                            <span class="toggle-label allowed">ALLOWED</span>
+                        </label>
+                    </div>
+                </div>
+            </section>
+
             <div class="save-status" id="saveStatus"></div>
         </main>
 
@@ -191,7 +242,7 @@
                     <button class="feedback-btn" id="feedbackBtn">📝 Share Feedback & Report Issues</button>
                     <button class="review-btn" id="reviewBtn">⭐ Love this extension? Leave a review!</button>
                 </div>
-                <p class="version">Version 1.2</p>
+                <p class="version">Version 1.3</p>
             </div>
         </footer>
 

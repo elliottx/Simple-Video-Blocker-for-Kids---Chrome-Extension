@@ -886,6 +886,113 @@ select:focus {
     background: #d0d0d0;
 }
 
+/* Keyword Blocking Styles */
+.keyword-section {
+    flex-direction: column !important;
+    align-items: stretch !important;
+}
+
+.keyword-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.keyword-input-row {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 12px;
+}
+
+.keyword-input {
+    flex: 1;
+    padding: 10px 14px;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    font-size: 14px;
+    font-family: inherit;
+    transition: border-color 0.2s;
+}
+
+.keyword-input:focus {
+    outline: none;
+    border-color: #FF6B35;
+}
+
+.btn-small {
+    padding: 10px 18px;
+    font-size: 13px;
+}
+
+.keyword-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 8px;
+    min-height: 10px;
+}
+
+.keyword-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: #ffebee;
+    color: #c62828;
+    padding: 5px 10px 5px 12px;
+    border-radius: 16px;
+    font-size: 13px;
+    font-weight: 500;
+    border: 1px solid #ef9a9a;
+    transition: all 0.2s;
+}
+
+.keyword-chip:hover {
+    background: #ffcdd2;
+}
+
+.keyword-chip .remove-keyword {
+    background: none;
+    border: none;
+    color: #c62828;
+    cursor: pointer;
+    font-size: 16px;
+    line-height: 1;
+    padding: 0 2px;
+    border-radius: 50%;
+    transition: background 0.2s;
+}
+
+.keyword-chip .remove-keyword:hover {
+    background: rgba(198, 40, 40, 0.15);
+}
+
+.keyword-hint {
+    color: #999;
+    font-size: 12px;
+    margin: 0;
+}
+
+/* YouTube Shorts icon */
+.platform-icon.shorts {
+    background: linear-gradient(135deg, #FF0000, #FF4444);
+}
+
+/* Blocked video placeholder (injected by content script) */
+.svb-blocked-placeholder {
+    background: #f5f5f5;
+    border: 2px dashed #ccc;
+    border-radius: 8px;
+    padding: 20px;
+    text-align: center;
+    color: #999;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100px;
+}
+
 @media (max-width: 600px) {
     .container {
         border-radius: 0;

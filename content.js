@@ -11,12 +11,20 @@ let timeRestrictions = {
   weeklySchedule: null
 };
 
+// Keyword blocking state
+let keywordBlockingEnabled = false;
+let blockedKeywords = [];
+
+// YouTube Shorts blocking state
+let blockShorts = false;
+
 function loadSettings() {
   return new Promise((resolve, reject) => {
     try {
       chrome.storage.sync.get([
         'allowHulu', 'allowNetflix', 'allowYouTube', 'allowTikTok',
-        'dailyAllowance', 'timerExpires', 'weeklySchedule'
+        'dailyAllowance', 'timerExpires', 'weeklySchedule',
+        'keywordBlockingEnabled', 'blockedKeywords', 'blockShorts'
       ], (result) => {
         if (chrome.runtime.lastError) {
           console.error('Error loading settings in content script:', chrome.runtime.lastError.message);
@@ -27,10 +35,17 @@ function loadSettings() {
         timeRestrictions.dailyAllowance = result.dailyAllowance || 0;
         timeRestrictions.timerExpires = result.timerExpires || null;
         timeRestrictions.weeklySchedule = result.weeklySchedule || null;
-        
+
+        // Load keyword blocking settings
+        keywordBlockingEnabled = result.keywordBlockingEnabled || false;
+        blockedKeywords = result.blockedKeywords || [];
+        blockShorts = result.blockShorts || false;
+
         console.log('Raw storage result:', result);
         console.log('Content script settings loaded:', settings);
         console.log('Time restrictions loaded:', timeRestrictions);
+        console.log('Keyword blocking:', keywordBlockingEnabled, 'keywords:', blockedKeywords);
+        console.log('Block Shorts:', blockShorts);
         console.log('Timer expires at:', timeRestrictions.timerExpires ? new Date(timeRestrictions.timerExpires) : 'null');
         resolve();
       });
@@ -204,6 +219,118 @@ function removeYouTubeNoCookieVideos() {
   });
 }
 
+// --- Keyword Blocking: hide YouTube videos whose titles match blocked keywords ---
+function filterVideosByKeyword() {
+  // Only run on YouTube
+  if (!window.location.hostname.includes('youtube.com')) return 0;
+  if (!keywordBlockingEnabled || blockedKeywords.length === 0) return 0;
+
+  let hiddenCount = 0;
+
+  // YouTube video renderers used on home, search, sidebar, and channel pages
+  const videoSelectors = [
+    'ytd-video-renderer',           // search results
+    'ytd-rich-item-renderer',       // home page grid items
+    'ytd-compact-video-renderer',   // sidebar recommendations
+    'ytd-grid-video-renderer',      // channel page grid
+    'ytd-reel-item-renderer'        // Shorts shelf items (also caught by Shorts blocker)
+  ];
+
+  const renderers = document.querySelectorAll(videoSelectors.join(','));
+
+  renderers.forEach(renderer => {
+    // Skip already-processed elements
+    if (renderer.dataset.svbKeywordChecked === 'true') return;
+    renderer.dataset.svbKeywordChecked = 'true';
+
+    // Extract video title text from the renderer
+    const titleEl = renderer.querySelector(
+      '#video-title, #title-wrapper, h3 a, .title, [id="video-title"]'
+    );
+    if (!titleEl) return;
+
+    const titleText = (titleEl.textContent || titleEl.innerText || '').toLowerCase();
+
+    // Check if any blocked keyword appears in the title
+    const matchedKeyword = blockedKeywords.find(kw => titleText.includes(kw));
+
+    if (matchedKeyword) {
+      // Replace the renderer content with a placeholder
+      renderer.style.position = 'relative';
+      renderer.innerHTML = '';
+      const placeholder = document.createElement('div');
+      placeholder.className = 'svb-blocked-placeholder';
+      placeholder.style.cssText =
+        'background:#f5f5f5;border:2px dashed #ccc;border-radius:8px;padding:20px;' +
+        'text-align:center;color:#999;font-size:14px;display:flex;align-items:center;' +
+        'justify-content:center;min-height:100px;width:100%;font-family:sans-serif;';
+      placeholder.textContent = 'Video blocked by SVB';
+      renderer.appendChild(placeholder);
+      hiddenCount++;
+      console.log(`SVB: Blocked video matching keyword "${matchedKeyword}":`, titleText.substring(0, 60));
+    }
+  });
+
+  return hiddenCount;
+}
+
+// --- YouTube Shorts Blocking: hide Shorts shelves and redirect Shorts URLs ---
+function hideYouTubeShorts() {
+  if (!blockShorts) return 0;
+  if (!window.location.hostname.includes('youtube.com')) return 0;
+
+  let hiddenCount = 0;
+
+  // 1. Hide Shorts shelf sections on home page and search
+  const shortsShelfSelectors = [
+    'ytd-rich-shelf-renderer[is-shorts]',                          // home page Shorts shelf
+    'ytd-reel-shelf-renderer',                                     // Shorts reel shelf
+    'ytd-rich-section-renderer:has(ytd-reel-shelf-renderer)',      // wrapper around Shorts shelf
+    'ytd-rich-section-renderer:has([is-shorts])'                   // alternate wrapper
+  ];
+
+  shortsShelfSelectors.forEach(sel => {
+    document.querySelectorAll(sel).forEach(el => {
+      if (el.style.display !== 'none') {
+        el.style.display = 'none';
+        hiddenCount++;
+      }
+    });
+  });
+
+  // 2. Hide individual Shorts links/thumbnails in other contexts
+  const shortsLinks = document.querySelectorAll('a[href*="/shorts/"]');
+  shortsLinks.forEach(link => {
+    // Walk up to the nearest video renderer or item container
+    const container = link.closest(
+      'ytd-video-renderer, ytd-rich-item-renderer, ytd-compact-video-renderer, ' +
+      'ytd-grid-video-renderer, ytd-reel-item-renderer'
+    );
+    if (container && container.style.display !== 'none') {
+      container.style.display = 'none';
+      hiddenCount++;
+    }
+  });
+
+  // 3. Hide the Shorts tab in the sidebar/guide
+  document.querySelectorAll('ytd-guide-entry-renderer, ytd-mini-guide-entry-renderer').forEach(entry => {
+    const link = entry.querySelector('a[title="Shorts"]');
+    if (link && entry.style.display !== 'none') {
+      entry.style.display = 'none';
+      hiddenCount++;
+    }
+  });
+
+  // 4. If the user navigated to a /shorts/ URL, redirect to home
+  if (window.location.pathname.startsWith('/shorts/') || window.location.pathname === '/shorts') {
+    console.log('SVB: Blocking YouTube Shorts page, redirecting to home');
+    window.location.replace('https://www.youtube.com');
+    return hiddenCount;
+  }
+
+  return hiddenCount;
+}
+
 // Listen for storage changes
 chrome.storage.onChanged.addListener((changes, namespace) => {
   if (namespace === 'sync') {
@@ -211,18 +338,22 @@ chrome.storage.onChanged.addListener((changes, namespace) => {
       // Update settings when they change
       chrome.storage.sync.get([
         'allowHulu', 'allowNetflix', 'allowYouTube', 'allowTikTok',
-        'dailyAllowance', 'timerExpires', 'weeklySchedule'
+        'dailyAllowance', 'timerExpires', 'weeklySchedule',
+        'keywordBlockingEnabled', 'blockedKeywords', 'blockShorts'
       ], (result) => {
         if (chrome.runtime.lastError) {
           console.error('Error updating settings in content script:', chrome.runtime.lastError.message);
           return;
         }
-        
+
         settings = { ...settings, ...result };
         timeRestrictions.dailyAllowance = result.dailyAllowance || 0;
         timeRestrictions.timerExpires = result.timerExpires || null;
         timeRestrictions.weeklySchedule = result.weeklySchedule || null;
-        
+        keywordBlockingEnabled = result.keywordBlockingEnabled || false;
+        blockedKeywords = result.blockedKeywords || [];
+        blockShorts = result.blockShorts || false;
+
         console.log('Settings updated:', settings);
         console.log('Time restrictions updated:', timeRestrictions);
         
@@ -244,6 +375,10 @@ chrome.storage.onChanged.addListener((changes, namespace) => {
             console.error('Error applying blocks after settings change:', error);
           }
         }
+
+        // Always re-run keyword filtering and Shorts blocking on setting changes
+        filterVideosByKeyword();
+        hideYouTubeShorts();
       });
     } catch (error) {
       console.error('Exception in storage change listener:', error);
@@ -322,7 +457,7 @@ loadSettings().then(() => {
       // Run blocking on page load
       removeVideos();
       muteAndPauseMedia();
-      
+
       // Notify background about video status
       notifyVideoStatus();
     } else {
@@ -331,12 +466,21 @@ loadSettings().then(() => {
       notifyVideoStatus();
     }
 
+    // Run keyword filtering and Shorts blocking regardless of platform block state
+    // (these are independent content filters that work on top of platform blocking)
+    filterVideosByKeyword();
+    hideYouTubeShorts();
+
     // Set up a MutationObserver to handle dynamically loaded content
     const observer = new MutationObserver(() => {
       try {
         const blockedCount = removeVideos();
         muteAndPauseMedia();
-        
+
+        // Run content filters on every DOM mutation (YouTube loads content dynamically)
+        filterVideosByKeyword();
+        hideYouTubeShorts();
+
         // Update badge when content changes
         if (blockedCount > 0) {
           // We just blocked new content, update badge

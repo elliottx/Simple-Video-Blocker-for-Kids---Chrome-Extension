@@ -300,6 +300,140 @@ document.addEventListener('DOMContentLoaded', () => {
         scheduleModal.style.display = 'none';
     });
     
+    // --- Keyword Blocking ---
+    const keywordInput = document.getElementById('keywordInput');
+    const addKeywordsBtn = document.getElementById('addKeywordsBtn');
+    const keywordChips = document.getElementById('keywordChips');
+    const keywordCount = document.getElementById('keywordCount');
+    const keywordBlockingToggle = document.getElementById('keywordBlockingEnabled');
+
+    // Load keyword blocking state and keywords from storage
+    function loadKeywordSettings() {
+        chrome.storage.sync.get(['keywordBlockingEnabled', 'blockedKeywords'], (result) => {
+            if (chrome.runtime.lastError) {
+                console.error('Error loading keyword settings:', chrome.runtime.lastError.message);
+                return;
+            }
+            keywordBlockingToggle.checked = result.keywordBlockingEnabled || false;
+            renderKeywordChips(result.blockedKeywords || []);
+        });
+    }
+
+    // Render keyword chips in the UI
+    function renderKeywordChips(keywords) {
+        keywordChips.innerHTML = '';
+        keywords.forEach(keyword => {
+            const chip = document.createElement('span');
+            chip.className = 'keyword-chip';
+            chip.innerHTML = `${keyword}<button class="remove-keyword" data-keyword="${keyword}">&times;</button>`;
+            keywordChips.appendChild(chip);
+        });
+        keywordCount.textContent = keywords.length === 0
+            ? 'No keywords set'
+            : `${keywords.length} keyword${keywords.length === 1 ? '' : 's'} active`;
+    }
+
+    // Add keywords from input field
+    function addKeywords() {
+        const raw = keywordInput.value.trim();
+        if (!raw) return;
+
+        // Split by commas, trim whitespace, remove empties and duplicates
+        const newKeywords = raw.split(',')
+            .map(k => k.trim().toLowerCase())
+            .filter(k => k.length > 0);
+
+        if (newKeywords.length === 0) return;
+
+        chrome.storage.sync.get(['blockedKeywords'], (result) => {
+            const existing = result.blockedKeywords || [];
+            const merged = [...new Set([...existing, ...newKeywords])];
+            chrome.storage.sync.set({ blockedKeywords: merged }, () => {
+                if (chrome.runtime.lastError) {
+                    showSaveStatus('Error saving keywords', false);
+                } else {
+                    keywordInput.value = '';
+                    renderKeywordChips(merged);
+                    showSaveStatus(`${newKeywords.length} keyword${newKeywords.length === 1 ? '' : 's'} added`, true);
+                }
+            });
+        });
+    }
+
+    // Remove a single keyword
+    function removeKeyword(keyword) {
+        chrome.storage.sync.get(['blockedKeywords'], (result) => {
+            const updated = (result.blockedKeywords || []).filter(k => k !== keyword);
+            chrome.storage.sync.set({ blockedKeywords: updated }, () => {
+                if (chrome.runtime.lastError) {
+                    showSaveStatus('Error removing keyword', false);
+                } else {
+                    renderKeywordChips(updated);
+                    showSaveStatus(`"${keyword}" removed`, true);
+                }
+            });
+        });
+    }
+
+    addKeywordsBtn.addEventListener('click', addKeywords);
+    keywordInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') addKeywords();
+    });
+
+    // Delegate click for remove buttons inside chips
+    keywordChips.addEventListener('click', (e) => {
+        const btn = e.target.closest('.remove-keyword');
+        if (btn) removeKeyword(btn.dataset.keyword);
+    });
+
+    // Toggle keyword blocking on/off
+    keywordBlockingToggle.addEventListener('change', async () => {
+        const authorized = await parentalControls.checkPIN();
+        if (!authorized) {
+            keywordBlockingToggle.checked = !keywordBlockingToggle.checked;
+            showSaveStatus('PIN required to change settings', false);
+            return;
+        }
+        chrome.storage.sync.set({ keywordBlockingEnabled: keywordBlockingToggle.checked }, () => {
+            if (chrome.runtime.lastError) {
+                showSaveStatus('Error saving setting', false);
+            } else {
+                const state = keywordBlockingToggle.checked ? 'enabled' : 'disabled';
+                showSaveStatus(`Keyword blocking ${state}`, true);
+            }
+        });
+    });
+
+    loadKeywordSettings();
+
+    // --- YouTube Shorts Blocking ---
+    const blockShortsToggle = document.getElementById('blockShorts');
+
+    // Load Shorts blocking state
+    chrome.storage.sync.get(['blockShorts'], (result) => {
+        if (chrome.runtime.lastError) return;
+        blockShortsToggle.checked = result.blockShorts || false;
+        updateToggleState(blockShortsToggle);
+    });
+
+    blockShortsToggle.addEventListener('change', async () => {
+        const authorized = await parentalControls.checkPIN();
+        if (!authorized) {
+            blockShortsToggle.checked = !blockShortsToggle.checked;
+            showSaveStatus('PIN required to change settings', false);
+            return;
+        }
+        updateToggleState(blockShortsToggle);
+        chrome.storage.sync.set({ blockShorts: blockShortsToggle.checked }, () => {
+            if (chrome.runtime.lastError) {
+                showSaveStatus('Error saving setting', false);
+            } else {
+                const state = blockShortsToggle.checked ? 'blocked' : 'allowed';
+                showSaveStatus(`YouTube Shorts ${state}`, true);
+            }
+        });
+    });
+
     // Protect platform toggles with PIN
     platforms.forEach(platform => {
         const checkbox = document.getElementById(`block${platform}`);

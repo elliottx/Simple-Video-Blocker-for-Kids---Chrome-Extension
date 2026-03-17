@@ -117,7 +117,7 @@ function createRule(urlFilter, resourceTypes) {
 
 function updateRules() {
   try {
-    chrome.storage.sync.get(['allowYouTube', 'allowTikTok', 'allowNetflix', 'allowHulu', 'dailyAllowance', 'timerExpires', 'weeklySchedule'], (result) => {
+    chrome.storage.sync.get(['allowYouTube', 'allowTikTok', 'allowNetflix', 'allowHulu', 'dailyAllowance', 'timerExpires', 'weeklySchedule', 'blockShorts'], (result) => {
       if (chrome.runtime.lastError) {
         console.error('Error reading storage for updateRules:', chrome.runtime.lastError.message);
         return;
@@ -195,7 +195,15 @@ function updateRules() {
           );
         }
       }
-    
+
+      // YouTube Shorts URL blocking (independent of timer/schedule — always block if enabled)
+      if (result.blockShorts) {
+        newRules.push(
+          createRule('*youtube.com/shorts/*', ['main_frame', 'sub_frame'])
+        );
+        console.log('Shorts blocking rules added');
+      }
+
     console.log('Updating rules:', { removeRuleIds: rulesToRemove, addRules: newRules });
 
     chrome.declarativeNetRequest.updateDynamicRules({
@@ -503,7 +511,10 @@ chrome.runtime.onInstalled.addListener((details) => {
           allowYouTube: false,
           allowTikTok: false,
           allowNetflix: true,
-          allowHulu: true
+          allowHulu: true,
+          keywordBlockingEnabled: false,
+          blockedKeywords: [],
+          blockShorts: false
         }, () => {
           if (chrome.runtime.lastError) {
             console.error('Error setting default storage:', chrome.runtime.lastError.message);
@@ -539,8 +550,8 @@ chrome.action.onClicked.addListener(() => {
 
 chrome.storage.onChanged.addListener((changes) => {
   try {
-    if (changes.allowYouTube || changes.allowTikTok || changes.allowNetflix || changes.allowHulu || 
-        changes.dailyAllowance || changes.timerExpires) {
+    if (changes.allowYouTube || changes.allowTikTok || changes.allowNetflix || changes.allowHulu ||
+        changes.dailyAllowance || changes.timerExpires || changes.blockShorts) {
       console.log('Settings or timer changed. Updating rules...');
       
       // If timer was just activated (dailyAllowance changed to > 0), immediately clear all rules
