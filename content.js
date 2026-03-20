@@ -18,13 +18,18 @@ let blockedKeywords = [];
 // YouTube Shorts blocking state
 let blockShorts = false;
 
+// Channel whitelist state
+let channelWhitelistEnabled = false;
+let whitelistedChannels = [];
+
 function loadSettings() {
   return new Promise((resolve, reject) => {
     try {
       chrome.storage.sync.get([
         'allowHulu', 'allowNetflix', 'allowYouTube', 'allowTikTok',
         'dailyAllowance', 'timerExpires', 'weeklySchedule',
-        'keywordBlockingEnabled', 'blockedKeywords', 'blockShorts'
+        'keywordBlockingEnabled', 'blockedKeywords', 'blockShorts',
+        'channelWhitelistEnabled', 'whitelistedChannels'
       ], (result) => {
         if (chrome.runtime.lastError) {
           console.error('Error loading settings in content script:', chrome.runtime.lastError.message);
@@ -40,6 +45,10 @@ function loadSettings() {
         keywordBlockingEnabled = result.keywordBlockingEnabled || false;
         blockedKeywords = result.blockedKeywords || [];
         blockShorts = result.blockShorts || false;
+
+        // Load channel whitelist settings
+        channelWhitelistEnabled = result.channelWhitelistEnabled || false;
+        whitelistedChannels = result.whitelistedChannels || [];
 
         console.log('Raw storage result:', result);
         console.log('Content script settings loaded:', settings);
@@ -105,6 +114,49 @@ function checkTimeAllowed() {
   return true;
 }
 
+// Detect if current YouTube page is on a whitelisted channel
+function isWhitelistedChannel() {
+  if (!channelWhitelistEnabled || whitelistedChannels.length === 0) return false;
+  if (!window.location.hostname.includes('youtube.com')) return false;
+
+  // Check URL for channel handle (/@handle or /c/name or /channel/ID)
+  const path = window.location.pathname.toLowerCase();
+  const handleMatch = path.match(/^\/@([\w-]+)/);
+  const channelMatch = path.match(/^\/c\/([\w-]+)/);
+
+  if (handleMatch) {
+    const handle = handleMatch[1];
+    if (whitelistedChannels.some(c => c.handle === handle)) return true;
+  }
+  if (channelMatch) {
+    const name = channelMatch[1];
+    if (whitelistedChannels.some(c => c.handle === name.toLowerCase())) return true;
+  }
+
+  // For watch pages, check the channel name/link in the DOM
+  if (path.startsWith('/watch')) {
+    // Check channel link element
+    const channelLink = document.querySelector(
+      'ytd-video-owner-renderer a.yt-simple-endpoint, ' +
+      '#channel-name a, ' +
+      'ytd-channel-name a'
+    );
+    if (channelLink) {
+      const href = (channelLink.href || '').toLowerCase();
+      const channelHandleFromLink = href.match(/\/@([\w-]+)/);
+      if (channelHandleFromLink) {
+        const h = channelHandleFromLink[1];
+        if (whitelistedChannels.some(c => c.handle === h)) return true;
+      }
+      // Also check by display name
+      const channelName = (channelLink.textContent || '').trim().toLowerCase().replace(/\s+/g, '');
+      if (whitelistedChannels.some(c => c.handle === channelName)) return true;
+    }
+  }
+
+  return false;
+}
+
 function isBlockedDomain(domain) {
   // Check if it's a video platform
   const isVideoPlatform = domain.includes('hulu.com') || 
@@ -133,10 +185,17 @@ function isBlockedDomain(domain) {
   }
   
   // No timer active, check individual platform settings
+  // Check channel whitelist for YouTube — if on an approved channel, allow it
+  const isYouTube = domain.includes('youtube.com') || domain.includes('youtu.be');
+  if (isYouTube && !settings.allowYouTube && isWhitelistedChannel()) {
+    console.log('SVB: YouTube blocked but current channel is whitelisted — allowing');
+    return false;
+  }
+
   const platformBlocked = (
     (domain.includes('hulu.com') && !settings.allowHulu) ||
     (domain.includes('netflix.com') && !settings.allowNetflix) ||
-    ((domain.includes('youtube.com') || domain.includes('youtu.be')) && !settings.allowYouTube) ||
+    (isYouTube && !settings.allowYouTube) ||
     ((domain.includes('tiktok.com') || domain.includes('musical.ly')) && !settings.allowTikTok)
   );
   
@@ -339,7 +398,8 @@ chrome.storage.onChanged.addListener((changes, namespace) => {
       chrome.storage.sync.get([
         'allowHulu', 'allowNetflix', 'allowYouTube', 'allowTikTok',
         'dailyAllowance', 'timerExpires', 'weeklySchedule',
-        'keywordBlockingEnabled', 'blockedKeywords', 'blockShorts'
+        'keywordBlockingEnabled', 'blockedKeywords', 'blockShorts',
+        'channelWhitelistEnabled', 'whitelistedChannels'
       ], (result) => {
         if (chrome.runtime.lastError) {
           console.error('Error updating settings in content script:', chrome.runtime.lastError.message);
@@ -353,6 +413,8 @@ chrome.storage.onChanged.addListener((changes, namespace) => {
         keywordBlockingEnabled = result.keywordBlockingEnabled || false;
         blockedKeywords = result.blockedKeywords || [];
         blockShorts = result.blockShorts || false;
+        channelWhitelistEnabled = result.channelWhitelistEnabled || false;
+        whitelistedChannels = result.whitelistedChannels || [];
 
         console.log('Settings updated:', settings);
         console.log('Time restrictions updated:', timeRestrictions);

@@ -213,6 +213,34 @@
                         </div>
                     </div>
 
+                    <!-- Channel Whitelist -->
+                    <div class="setting-item keyword-section">
+                        <div class="setting-info" style="width: 100%;">
+                            <div class="keyword-header">
+                                <div>
+                                    <h3>📺 Approved YouTube Channels</h3>
+                                    <p>When YouTube is blocked, these channels are still allowed. Add channel names or URLs.</p>
+                                </div>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" id="channelWhitelistEnabled">
+                                    <span class="slider"></span>
+                                    <span class="toggle-label blocked">ON</span>
+                                    <span class="toggle-label allowed">OFF</span>
+                                </label>
+                            </div>
+                            <div id="channelControls">
+                                <div class="keyword-input-row">
+                                    <input type="text" id="channelInput" class="keyword-input" placeholder="e.g. @CrashCourse, National Geographic, youtube.com/@kurzgesagt">
+                                    <button id="addChannelBtn" class="btn-primary btn-small">Add</button>
+                                </div>
+                                <div class="keyword-chips" id="channelChips">
+                                    <!-- Chips populated by JS -->
+                                </div>
+                                <p class="keyword-hint" id="channelCount">No approved channels</p>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- YouTube Shorts Blocking -->
                     <div class="setting-item">
                         <div class="setting-info">

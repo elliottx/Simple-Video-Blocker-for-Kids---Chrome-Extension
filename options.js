@@ -406,6 +406,126 @@ document.addEventListener('DOMContentLoaded', () => {
 
     loadKeywordSettings();
 
+    // --- Channel Whitelist ---
+    const channelInput = document.getElementById('channelInput');
+    const addChannelBtn = document.getElementById('addChannelBtn');
+    const channelChips = document.getElementById('channelChips');
+    const channelCount = document.getElementById('channelCount');
+    const channelWhitelistToggle = document.getElementById('channelWhitelistEnabled');
+
+    function loadChannelSettings() {
+        chrome.storage.sync.get(['channelWhitelistEnabled', 'whitelistedChannels'], (result) => {
+            if (chrome.runtime.lastError) return;
+            channelWhitelistToggle.checked = result.channelWhitelistEnabled || false;
+            renderChannelChips(result.whitelistedChannels || []);
+        });
+    }
+
+    function renderChannelChips(channels) {
+        channelChips.innerHTML = '';
+        channels.forEach(channel => {
+            const chip = document.createElement('span');
+            chip.className = 'keyword-chip';
+            chip.innerHTML = `${channel.name}<button class="remove-keyword" data-channel="${channel.handle}">&times;</button>`;
+            channelChips.appendChild(chip);
+        });
+        channelCount.textContent = channels.length === 0
+            ? 'No approved channels'
+            : `${channels.length} channel${channels.length === 1 ? '' : 's'} approved`;
+    }
+
+    function parseChannelInput(raw) {
+        // Accept: @handle, channel name, or youtube.com/@handle URL
+        raw = raw.trim();
+        let handle = '';
+        let name = raw;
+
+        // Extract handle from URL
+        const urlMatch = raw.match(/youtube\.com\/@?([\w-]+)/i);
+        if (urlMatch) {
+            handle = urlMatch[1].toLowerCase();
+            name = '@' + handle;
+        } else if (raw.startsWith('@')) {
+            handle = raw.substring(1).toLowerCase();
+            name = raw;
+        } else {
+            // Plain name — use as-is for display, lowercase for matching
+            handle = raw.toLowerCase().replace(/\s+/g, '');
+            name = raw;
+        }
+        return { handle, name };
+    }
+
+    function addChannel() {
+        const raw = channelInput.value.trim();
+        if (!raw) return;
+
+        const parsed = parseChannelInput(raw);
+        if (!parsed.handle) return;
+
+        chrome.storage.sync.get(['whitelistedChannels'], (result) => {
+            const existing = result.whitelistedChannels || [];
+            // Check for duplicate handles
+            if (existing.some(c => c.handle === parsed.handle)) {
+                showSaveStatus('Channel already added', false);
+                return;
+            }
+            const updated = [...existing, parsed];
+            chrome.storage.sync.set({ whitelistedChannels: updated }, () => {
+                if (chrome.runtime.lastError) {
+                    showSaveStatus('Error saving channel', false);
+                } else {
+                    channelInput.value = '';
+                    renderChannelChips(updated);
+                    showSaveStatus(`${parsed.name} added`, true);
+                }
+            });
+        });
+    }
+
+    function removeChannel(handle) {
+        chrome.storage.sync.get(['whitelistedChannels'], (result) => {
+            const updated = (result.whitelistedChannels || []).filter(c => c.handle !== handle);
+            chrome.storage.sync.set({ whitelistedChannels: updated }, () => {
+                if (chrome.runtime.lastError) {
+                    showSaveStatus('Error removing channel', false);
+                } else {
+                    renderChannelChips(updated);
+                    showSaveStatus('Channel removed', true);
+                }
+            });
+        });
+    }
+
+    addChannelBtn.addEventListener('click', addChannel);
+    channelInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') addChannel();
+    });
+
+    channelChips.addEventListener('click', (e) => {
+        const btn = e.target.closest('.remove-keyword');
+        if (btn && btn.dataset.channel) removeChannel(btn.dataset.channel);
+    });
+
+    channelWhitelistToggle.addEventListener('change', async () => {
+        const authorized = await parentalControls.checkPIN();
+        if (!authorized) {
+            channelWhitelistToggle.checked = !channelWhitelistToggle.checked;
+            showSaveStatus('PIN required to change settings', false);
+            return;
+        }
+        chrome.storage.sync.set({ channelWhitelistEnabled: channelWhitelistToggle.checked }, () => {
+            if (chrome.runtime.lastError) {
+                showSaveStatus('Error saving setting', false);
+            } else {
+                const state = channelWhitelistToggle.checked ? 'enabled' : 'disabled';
+                showSaveStatus(`Channel whitelist ${state}`, true);
+            }
+        });
+    });
+
+    loadChannelSettings();
+
     // --- YouTube Shorts Blocking ---
     const blockShortsToggle = document.getElementById('blockShorts');
 
